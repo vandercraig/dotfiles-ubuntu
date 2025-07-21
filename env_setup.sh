@@ -1,9 +1,12 @@
 #!/bin/bash
 
 # Development Environment Setup Script
-# For Ubuntu WSL with Zsh, Oh My Zsh, and Python development tools
+# For Ubuntu WSL with Zsh, and Python development tools
 
 set -e  # Exit on any error
+
+# Ensure ~/.local/bin and ~/bin are in the PATH for this script
+export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
 echo "🚀 Starting development environment setup..."
 
@@ -77,36 +80,25 @@ sudo apt install -y \
     sqlite3 \
     neofetch \
     stow \
-    bat
+    bat \
+    zsh-autosuggestions \
+    zsh-syntax-highlighting
 
-# Install Oh My Zsh
-print_status "Installing Oh My Zsh..."
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    print_success "Oh My Zsh installed"
+# Install WezTerm (modern terminal emulator), but not on WSL
+print_status "Checking for WezTerm installation..."
+if [ -z "$WSL_DISTRO_NAME" ]; then
+    if ! command -v wezterm &> /dev/null; then
+        print_status "Installing WezTerm (not on WSL)..."
+        curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
+        echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
+        sudo apt update
+        sudo apt install -y wezterm
+        print_success "WezTerm installed."
+    else
+        print_warning "WezTerm already installed."
+    fi
 else
-    print_warning "Oh My Zsh already installed"
-fi
-
-# Set ZSH_CUSTOM path
-ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
-
-# Install zsh-autosuggestions plugin
-print_status "Installing zsh-autosuggestions plugin..."
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
-    git clone https://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions
-    print_success "zsh-autosuggestions installed"
-else
-    print_warning "zsh-autosuggestions already installed"
-fi
-
-# Install zsh-syntax-highlighting plugin
-print_status "Installing zsh-syntax-highlighting plugin..."
-if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
-    print_success "zsh-syntax-highlighting installed"
-else
-    print_warning "zsh-syntax-highlighting already installed"
+    print_warning "Skipping WezTerm installation on WSL."
 fi
 
 # Install Starship prompt
@@ -132,43 +124,10 @@ fi
 print_status "Installing uv..."
 if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    
-    # Source the uv environment to make it available immediately
-    if [ -f "$HOME/.local/bin/env" ]; then
-        source "$HOME/.local/bin/env"
-    fi
-    
     print_success "uv installed"
-    print_warning "You may need to restart your shell or run 'source ~/.bashrc' to use uv"
+    print_warning "You may need to restart your shell for uv to be in your PATH"
 else
     print_warning "uv already installed"
-fi
-
-# Configure uv shell completions
-print_status "Configuring uv shell completions..."
-# Try to make uv available if it's not in current PATH
-if ! command -v uv &> /dev/null && [ -f "$HOME/.local/bin/env" ]; then
-    source "$HOME/.local/bin/env"
-fi
-
-if command -v uv &> /dev/null; then
-    # Create completions directory if it doesn't exist
-    mkdir -p "$HOME/.oh-my-zsh/completions"
-    
-    # Generate and save uv completions
-    if uv generate-shell-completion zsh > "$HOME/.oh-my-zsh/completions/_uv" 2>/dev/null; then
-        print_success "uv shell completions configured"
-    else
-        print_warning "Failed to generate uv completions, but continuing setup"
-    fi
-    
-    # Add completions directory to fpath in .zshrc if not already there
-    if [ -f "$HOME/.zshrc" ] && ! grep -q 'fpath=($HOME/.oh-my-zsh/completions $fpath)' "$HOME/.zshrc"; then
-        echo 'fpath=($HOME/.oh-my-zsh/completions $fpath)' >> "$HOME/.zshrc"
-        print_success "Added uv completions to fpath"
-    fi
-else
-    print_warning "uv not available, skipping completions setup"
 fi
 
 # Install Python via uv for better version management
@@ -181,7 +140,7 @@ fi
 
 # Install Node.js and npm (latest LTS)
 print_status "Installing Node.js and npm..."
-if ! command -v node &> /dev/null || [ "$(node -v | cut -d'.' -f1 | cut -d'v' -f2)" -lt 18 ]; then
+if ! command -v npm &> /dev/null; then
     # Install Node.js via NodeSource repository for latest LTS
     curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
     sudo apt-get install -y nodejs
@@ -189,33 +148,33 @@ if ! command -v node &> /dev/null || [ "$(node -v | cut -d'.' -f1 | cut -d'v' -f
     node --version
     npm --version
 else
-    print_warning "Node.js already installed"
+    print_warning "Node.js and npm already installed"
     node --version
     npm --version
-    
-    # Install Docker (Engine, CLI, Compose)
-    print_status "Installing Docker..."
-    if ! command -v docker &> /dev/null; then
-        # Remove any old versions
-        sudo apt-get remove -y docker docker-engine docker.io containerd runc || true
-        # Install dependencies
-        sudo apt-get install -y ca-certificates curl gnupg lsb-release
-        # Add Docker's official GPG key
-        sudo install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-        sudo chmod a+r /etc/apt/keyrings/docker.gpg
-        # Add Docker repository
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        # Update and install Docker packages
-        sudo apt-get update
-        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        print_success "Docker and Docker Compose installed"
-        # Add current user to docker group
-        sudo usermod -aG docker $USER
-        print_success "Added $USER to docker group (log out and back in for effect)"
-    else
-        print_warning "Docker already installed"
-    fi
+fi
+
+# Install Docker (Engine, CLI, Compose)
+print_status "Installing Docker..."
+if ! command -v docker &> /dev/null; then
+    # Remove any old versions
+    sudo apt-get remove -y docker docker-engine docker.io containerd runc || true
+    # Install dependencies
+    sudo apt-get install -y ca-certificates curl gnupg lsb-release
+    # Add Docker's official GPG key
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+    # Add Docker repository
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    # Update and install Docker packages
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    print_success "Docker and Docker Compose installed"
+    # Add current user to docker group
+    sudo usermod -aG docker $USER
+    print_success "Added $USER to docker group (log out and back in for effect)"
+else
+    print_warning "Docker already installed"
 fi
 
 # Make zsh the default shell (optional)
@@ -230,34 +189,36 @@ fi
 
 # Install Just (command runner)
 print_status "Installing Just (command runner)..."
-if ! command -v just &> /dev/null && [ ! -f "$HOME/bin/just" ]; then
-    mkdir -p ~/bin
-    curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/bin
-    print_success "Just installed to ~/bin"
-    print_warning "Make sure ~/bin is in your PATH (will be added to .zshrc)"
+if command -v uv &> /dev/null; then
+    uv tool install just
+    print_success "Just (command runner) installed via uv"
 else
-    print_warning "Just already installed"
+    print_warning "uv not available, skipping Just installation"
 fi
 
 # Install Claude Code
 print_status "Installing Claude Code..."
-if ! command -v claude &> /dev/null; then
-    curl -fsSL https://claude.ai/cli/install.sh | sh
-    print_success "Claude Code installed"
+if ! command -v claude-code &> /dev/null && command -v npm &> /dev/null; then
+    # Configure npm to use local prefix to avoid sudo
+    npm config set prefix ~/.local
+    npm install -g @anthropic-ai/claude-code
+    print_success "Claude Code installed locally"
+elif ! command -v npm &> /dev/null; then
+    print_warning "npm not available, skipping Claude Code installation"
 else
     print_warning "Claude Code already installed"
 fi
 
-# # Install Gemini CLI
-# print_status "Installing Gemini CLI..."
-# if ! command -v gemini &> /dev/null && command -v npm &> /dev/null; then
-#     npm install -g @google/gemini-cli
-#     print_success "Gemini CLI installed"
-# elif ! command -v npm &> /dev/null; then
-#     print_warning "npm not available, skipping Gemini CLI installation"
-# else
-#     print_warning "Gemini CLI already installed"
-# fi
+# Install Gemini CLI
+print_status "Installing Gemini CLI..."
+if ! command -v gemini &> /dev/null && command -v npm &> /dev/null; then
+    npm install -g @google/gemini-cli
+    print_success "Gemini CLI installed"
+elif ! command -v npm &> /dev/null; then
+    print_warning "npm not available, skipping Gemini CLI installation"
+else
+    print_warning "Gemini CLI already installed"
+fi
 
 
 # Install data engineering tools
@@ -276,70 +237,40 @@ if command -v uv &> /dev/null; then
     print_status "Installing Python development tools via uv..."
     
     # Install ruff (Python linter/formatter)
-    if ! uv tool list | grep -q "ruff"; then
-        uv tool install ruff
-        print_success "Ruff (Python linter/formatter) installed via uv"
-    else
-        print_warning "Ruff already installed via uv"
-    fi
+    uv tool install ruff
+    print_success "Ruff (Python linter/formatter) installed via uv"
     
     # Install pre-commit (Git hooks framework)
-    if ! uv tool list | grep -q "pre-commit"; then
-        uv tool install pre-commit
-        print_success "pre-commit installed via uv"
-    else
-        print_warning "pre-commit already installed via uv"
-    fi
-       
-    if ! uv tool list | grep -q "pyright"; then
-        uv tool install pyright
-        print_success "Pyright (Python type checker) installed via uv"
-    else
-        print_warning "Pyright already installed via uv"
-    fi
+    uv tool install pre-commit
+    print_success "pre-commit installed via uv"
     
-    if ! uv tool list | grep -q "bandit"; then
-        uv tool install bandit
-        print_success "Bandit (security linter) installed via uv"
-    else
-        print_warning "Bandit already installed via uv"
-    fi
+    # Install pyright
+    uv tool install pyright
+    print_success "Pyright (Python type checker) installed via uv"
     
-    # Install data engineering CLI tools
-    if ! uv tool list | grep -q "datasette"; then
-        uv tool install datasette
-        print_success "Datasette (instant web API for datasets) installed via uv"
-    else
-        print_warning "Datasette already installed via uv"
-    fi
+    # Install bandit
+    uv tool install bandit
+    print_success "Bandit (security linter) installed via uv"
     
-    if ! uv tool list | grep -q "litecli"; then
-        uv tool install litecli
-        print_success "LiteCLI (enhanced SQLite CLI) installed via uv"
-    else
-        print_warning "LiteCLI already installed via uv"
-    fi
+    # Install datasette
+    uv tool install datasette
+    print_success "Datasette (instant web API for datasets) installed via uv"
     
-    if ! uv tool list | grep -q "csvkit"; then
-        uv tool install csvkit
-        print_success "CSVKit (CSV utilities) installed via uv"
-    else
-        print_warning "CSVKit already installed via uv"
-    fi
+    # Install litecli
+    uv tool install litecli
+    print_success "LiteCLI (enhanced SQLite CLI) installed via uv"
     
-    if ! uv tool list | grep -q "rich-cli"; then
-        uv tool install rich-cli
-        print_success "Rich-CLI (beautiful terminal output) installed via uv"
-    else
-        print_warning "Rich-CLI already installed via uv"
-    fi
-
-    if ! uv tool list | grep -q "pytest"; then
-        uv tool install pytest
-        print_success "pytest installed via uv"
-    else
-        print_warning "pytest already installed via uv"
-    fi    
+    # Install csvkit
+    uv tool install csvkit
+    print_success "CSVKit (CSV utilities) installed via uv"
+    
+    # Install rich-cli
+    uv tool install rich-cli
+    print_success "Rich-CLI (beautiful terminal output) installed via uv"
+    
+    # Install pytest
+    uv tool install pytest
+    print_success "pytest installed via uv"
 else
     print_warning "uv not available, skipping Python tools installation"
 fi
@@ -379,7 +310,6 @@ fi
 # Log installed components
 echo "📋 Installed components:" > INSTALLED_COMPONENTS.md
 echo "- zsh" >> INSTALLED_COMPONENTS.md
-echo "- Oh My Zsh" >> INSTALLED_COMPONENTS.md
 echo "- zsh-autosuggestions plugin" >> INSTALLED_COMPONENTS.md
 echo "- zsh-syntax-highlighting plugin" >> INSTALLED_COMPONENTS.md
 echo "- Starship prompt (cross-shell)" >> INSTALLED_COMPONENTS.md
@@ -421,7 +351,27 @@ print_success "Component list saved to INSTALLED_COMPONENTS.md"
 print_success "🎉 Setup complete!"
 echo
 echo "Next steps:"
-echo "1. Copy your .zshrc configuration to this directory"
-echo "2. Restart your terminal or run: source ~/.zshrc"
-echo "3. Run 'starship config' to customize your prompt"
-echo "4. Install additional tools as needed (see additional-tools.md)"
+echo
+echo "📌 Setting up Zsh as your default shell:"
+echo "   If zsh is not your default shell, run the following commands:"
+echo "   1. chsh -s \$(which zsh)"
+echo "   2. Log out and log back in (or restart your terminal session)"
+echo "   3. Verify with: echo \$SHELL (should show path to zsh)"
+echo
+echo "📌 Configuring your shell:"
+echo "   1. Copy your .zshrc configuration to this directory if needed"
+echo "   2. Restart your terminal or run: source ~/.zshrc"
+echo "   3. Verify Starship is working - you should see a customized prompt"
+echo
+echo "📌 Setting up Nushell (optional modern shell):"
+echo "   See nushell-setup.md for detailed Nushell configuration with Starship"
+echo "   Quick setup:"
+echo "   1. starship init nu | save --force ~/.cache/starship/init.nu"
+echo "   2. Add Starship configuration to ~/.config/nushell/config.nu"
+echo "   3. Run 'nu' to start Nushell"
+echo
+echo "📌 Additional customization:"
+echo "   1. Run 'starship config' to customize your prompt further"
+echo "   2. Install additional tools as needed"
+echo "   3. Review INSTALLED_COMPONENTS.md for what was installed"
+echo "   4. Configure Docker: run 'docker run hello-world' to test"

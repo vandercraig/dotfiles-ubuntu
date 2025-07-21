@@ -1,16 +1,15 @@
 # Development Environment Setup
 
-This repository contains scripts and configurations to set up a development environment on Ubuntu WSL, with a focus on Python data engineering.
+This repository contains scripts and configurations to set up a development environment on Ubuntu, with a focus on Python data engineering.
 
 ## What Gets Installed
 
-### Core Shell Environment
-- **Zsh**: A powerful, modern shell.
-- **Oh My Zsh**: A framework for managing Zsh configuration.
+### Core Components
+- **WezTerm**: A powerful, GPU-accelerated terminal emulator (installed on non-WSL systems).
+- **Zsh**: A modern shell with powerful features.
 - **Nushell**: A modern, cross-platform shell.
 - **Starship**: A fast, cross-shell prompt.
-- **zsh-autosuggestions**: Fish-like autosuggestions for Zsh.
-- **zsh-syntax-highlighting**: Real-time syntax highlighting for Zsh.
+- **zsh-autosuggestions & zsh-syntax-highlighting**: Essential plugins for an enhanced Zsh experience.
 
 ### Python Development
 - **uv**: A fast Python package installer and resolver.
@@ -30,6 +29,7 @@ This repository contains scripts and configurations to set up a development envi
 ### Development Utilities
 - **Just**: A command runner.
 - **Claude Code**: Anthropic's CLI tool.
+- **Gemini CLI**: Google's generative AI CLI.
 - **Node.js (LTS)**: A JavaScript runtime.
 - **Docker**: A platform for developing, shipping, and running applications in containers.
 - **Build essentials**: Compiler tools for building from source.
@@ -41,7 +41,7 @@ This repository contains scripts and configurations to set up a development envi
 For icons to render correctly in the terminal, download and install a Nerd Font from [nerdfonts.com](https://www.nerdfonts.com/).
 Recommended fonts: FiraCode Nerd Font, JetBrains Mono Nerd Font.
 
-After installation, configure your terminal (e.g., Windows Terminal) to use the chosen Nerd Font in your profile settings.
+After installation, configure your terminal to use the chosen Nerd Font.
 
 ### 2. Clone and Run Setup
 ```bash
@@ -54,7 +54,7 @@ chmod +x env_setup.sh
 ./env_setup.sh
 ```
 
-### 3. Apply Shell Configuration
+### 3. Apply Shell & Terminal Configuration
 
 #### For Zsh
 ```bash
@@ -65,95 +65,79 @@ cp .zshrc ~/.zshrc
 source ~/.zshrc
 ```
 
-#### For Nushell
+#### For WezTerm
 ```bash
-# Run the Nushell configuration script
-nu configure_nushell.nu
+# Create the config directory if it doesn't exist
+mkdir -p ~/.config/wezterm
+
+# Copy the WezTerm configuration
+cp wezterm.lua ~/.config/wezterm/wezterm.lua
 ```
 
-The setup script installs all tools and dependencies. The shell configurations link everything together.
+#### For Nushell
+See `nushell-setup.md` for instructions on configuring Nushell with Starship.
 
 ## Repository Structure
 
 ```
 .
 ├── env_setup.sh              # Main setup script
-├── configure_nushell.nu      # Configuration script for Nushell
 ├── .zshrc                    # Zsh configuration
+├── wezterm.lua               # WezTerm terminal configuration
+├── nushell-setup.md          # Nushell setup guide
 ├── starship/starship_theme.toml # Custom Starship theme
-├── terminal-theme.jsonc      # Windows Terminal color schemes
+├── terminal-theme.jsonc      # Color schemes for other terminals (e.g., Windows Terminal)
 ├── README.md                 # This file
 └── INSTALLED_COMPONENTS.md   # Auto-generated list of installed components
 ```
 
-## Features
-
-### Custom Starship Theme
-- Based on the DraculaPlus color scheme.
-- Hides the username for a cleaner look (shows only for root/SSH).
-- Displays Git branch and status.
-- Detects and shows the version of programming languages (Python, Node.js, etc.).
-- Shows Python virtual environment status.
-
-### Python Development
-- Fast package management with `uv`.
-- Code quality enforced with `ruff` (linting and formatting), `pyright` (type checking), and `bandit` (security).
-- Git hooks managed with `pre-commit` for automated quality checks.
-
-### Data Engineering Tools
-- **DuckDB** for high-performance analytics.
-- **CSVKit** for CSV processing.
-- **LiteCLI** and **Datasette** for database exploration.
-- **Rich-CLI** for better data visualization in the terminal.
-
 ## Customization
 
-### Changing Starship Theme
-The repository includes multiple color schemes in `terminal-theme.jsonc`. To switch themes, edit `starship/starship_theme.toml` and change the `palette` value.
+### WezTerm Personalization
+The `wezterm.lua` configuration is parameterized for easy customization. Open the file and edit the `user_params` table at the top to change your theme, background image, font, and more.
 
-### Adding Oh My Zsh Plugins
-Edit the `plugins` array in `.zshrc`:
-```zsh
-plugins=(
-    git
-    zsh-autosuggestions
-    zsh-syntax-highlighting
-    # Add new plugins here
-)
+**Example:**
+```lua
+-- In wezterm.lua
+local user_params = {
+  color_scheme = 'kanagawabones', -- or 'tokyonight'
+  background_image_path = '/path/to/your/image.png',
+  font = 'FiraCode Nerd Font',
+  font_size = 12.0,
+  background_tint_opacity = 0.85,
+}
 ```
 
 ### Adding `uv` Tools
-Edit `env_setup.sh` to add new Python tools installed via `uv`:
+Edit `env_setup.sh` to add new Python tools installed via `uv`. `uv` handles cases where the tool is already installed.
+
+**Example:**
 ```bash
 # In env_setup.sh
-if ! uv tool list | grep -q "tool-name"; then
-    uv tool install tool-name
-    print_success "Tool description installed via uv"
-else
-    print_warning "Tool already installed via uv"
-fi
+uv tool install <tool-name>
+print_success "<Tool description> installed via uv"
 ```
 
 ## Troubleshooting
 
 ### Font and Icon Issues
-- **Missing icons**: Ensure a Nerd Font is installed and configured in your terminal settings.
+- **Missing icons**: Ensure a Nerd Font is installed and configured in your terminal (e.g., in `wezterm.lua`).
 - **Broken symbols**: Restart your terminal after setting the font.
 
 ### Shell Issues
 - **Zsh not default**: Run `chsh -s $(which zsh)` and restart the terminal.
-- **Starship not loading**: Check that `eval "$(starship init zsh)"` is in `.zshrc`.
+- **Starship not loading**: Check that `eval "$(starship init zsh)"` is at the end of your `.zshrc`.
 
 ### `uv` Issues
-- **`uv` command not found**: Restart your terminal or run `source ~/.bashrc` (or `~/.zshrc`). The installer adds it to the path.
+- **`uv` command not found**: Restart your terminal or run `source ~/.zshrc`. The installer adds it to your shell's PATH.
 - **Permission errors**: Do not use `sudo` with `uv` commands.
 
 ## Maintenance
 
 ### Update Components
 ```bash
-# Update Oh My Zsh and plugins
-omz update
+# Update system packages
+sudo apt update && sudo apt upgrade -y
 
 # Update Starship
 curl -sS https://starship.rs/install.sh | sh -s -- --yes
@@ -171,6 +155,7 @@ npm update -g
 # Backup important configs
 cp ~/.zshrc ~/zshrc.backup
 cp ~/.config/starship.toml ~/starship.toml.backup
+cp ~/.config/wezterm/wezterm.lua ~/wezterm.lua.backup
 cp -r ~/.config/nushell ~/nushell.backup
 ```
 
