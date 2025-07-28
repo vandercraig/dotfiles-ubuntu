@@ -13,8 +13,8 @@
 # 1. Environment
 # ------------------------------------------------------------------------------
 # Set the default editor
-export EDITOR='vim'
-export VISUAL='vim'
+export EDITOR='nvim'
+export VISUAL='nvim'
 
 # Set PATH to include local binaries
 export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
@@ -39,7 +39,6 @@ alias la='ls -A'
 alias l='ls -CF'
 alias grep='grep --color=auto'
 alias zshconfig='nvim ~/.zshrc'
-alias activate='source .venv/bin/activate'
 
 # Docker
 alias d='docker'
@@ -93,17 +92,29 @@ extract() {
 # ------------------------------------------------------------------------------
 # 4. Plugins
 # ------------------------------------------------------------------------------
-# Source system-installed plugins.
-# These are installed via apt in the setup script.
+# Path to your Oh My Zsh installation.
+export ZSH="$HOME/.oh-my-zsh"
 
-# zsh-syntax-highlighting
-if [ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
-    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-fi
+# Which plugins would you like to load?
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
+plugins=(
+    git
+    python
+    pip
+    docker
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    z
+    extract
+    colored-man-pages
+)
 
-# zsh-autosuggestions
-if [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
-    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# Source Oh My Zsh
+if [ -d "$ZSH" ]; then
+    source $ZSH/oh-my-zsh.sh
+else
+    echo "Oh My Zsh is not installed at $ZSH"
 fi
 
 # ------------------------------------------------------------------------------
@@ -115,5 +126,10 @@ eval "$(starship init zsh)"
 # Source local environment file if it exists
 if [ -f "$HOME/.local/bin/env" ]; then
     . "$HOME/.local/bin/env"
+fi
+
+# Source machine-specific configuration if it exists
+if [ -f "$HOME/.zshrc.local" ]; then
+    source "$HOME/.zshrc.local"
 fi
 
