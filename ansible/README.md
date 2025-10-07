@@ -1,14 +1,15 @@
 # Ansible Dotfiles Setup
 
-This Ansible playbook automates the setup of your development environment based on the `env_setup.sh` and `install.sh` scripts.
+This Ansible playbook automates the setup of your development environment.
 
 ## What It Does
 
 ### Package Installation
 
 - Updates system packages
-- Installs base utilities (git, curl, wget, build-essential, etc.)
+- Ensure base utilities are installed (git, curl, wget, build-essential, etc.)
 - Installs development tools (zsh, neovim, ripgrep, fd, bat, etc.)
+- Agentic programming CLIs (claude, gemini)
 - Installs WezTerm terminal emulator (skipped on WSL)
 - Installs Nushell
 - Installs Starship prompt
@@ -23,7 +24,6 @@ This Ansible playbook automates the setup of your development environment based 
 - pyright
 - bandit
 - pre-commit
-- duckdb
 - datasette
 - litecli
 - csvkit
@@ -32,10 +32,6 @@ This Ansible playbook automates the setup of your development environment based 
 
 ### Symlinks & Configuration
 
-- Creates symlink for `.zshrc` (backs up existing)
-- Creates symlink for `nvim` config (backs up existing)
-- Creates symlink for `wezterm.lua` config (backs up existing, skipped on WSL)
-- Copies Starship theme to `~/.config/starship.toml`
 - Creates `bat` symlink from `batcat`
 - Creates `fd` symlink from `fdfind`
 - Sets zsh as default shell
@@ -65,12 +61,10 @@ cd ansible
 ansible-playbook playbook.yml --ask-become-pass
 ```
 
-### Run specific tasks with tags (coming soon)
-
-You can add tags to the tasks if you want to run only certain parts:
+### Run specific tasks with tags
 
 ```bash
-# Example (after adding tags):
+# Examples:
 ansible-playbook playbook.yml --tags "packages" --ask-become-pass
 ansible-playbook playbook.yml --tags "symlinks" --ask-become-pass
 ```
@@ -136,10 +130,6 @@ Add tools to the `uv tool install` loop in `roles/dotfiles/tasks/main.yml`:
     - your-new-tool
 ```
 
-### Skip Certain Steps
-
-Comment out or remove tasks you don't want to run.
-
 ## Troubleshooting
 
 ### Permission Errors
@@ -157,23 +147,3 @@ The playbook backs up existing files before creating symlinks. Check for `.backu
 ### Docker Permission Denied
 
 Log out and back in after the playbook runs to refresh your group membership.
-
-## Comparison with Shell Scripts
-
-This Ansible playbook replaces:
-
-- `env_setup.sh` - Package installation and tool setup
-- `install.sh` - Symlink creation
-
-**Benefits of Ansible:**
-
-- Idempotent (safe to run multiple times)
-- Better error handling
-- Structured and organized
-- Easy to extend and maintain
-- Can be run on remote machines
-- Built-in backup functionality
-
-## License
-
-This configuration is provided as-is for personal and educational use.

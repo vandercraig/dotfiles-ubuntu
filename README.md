@@ -67,6 +67,12 @@ cd ..
 ./stow.sh install
 ```
 
+> For non-personal user accounts, exclude the `personal` tag,
+
+```bash
+ansible-playbook playbook.yml --skip-tags personal --ask-become-pass --check
+```
+
 The Ansible playbook will:
 
 - Install all packages (system tools, dev tools, neovim, etc.)
@@ -75,7 +81,7 @@ The Ansible playbook will:
 - Configure your shell environment
 - Set zsh as default shell
 
-See `ansible/README.md` for more details about package installation.
+See [`ansible/README.md`](ansible/README.md) for more details about package installation.
 
 ### 3. Manage Dotfiles
 
@@ -104,14 +110,11 @@ See `ansible/README.md` for more details about package installation.
 - **Restart terminal** or run `source ~/.zshrc`
 - WezTerm auto-skipped on WSL systems
 
-### 5. Code Quality (Optional)
+### 5. Code Quality
 
 If you modify configs, pre-commit hooks maintain code quality:
 
 ```bash
-# Install direnv (handles pre-commit auto-install)
-sudo apt install direnv
-eval "$(direnv hook zsh)"  # Add to ~/.zshrc
 direnv allow
 
 # Or install pre-commit manually
@@ -133,28 +136,6 @@ starship/.config/     # → ~/.config/starship.toml
 nushell/.config/      # → ~/.config/nushell
 
 stow.sh               # Symlink helper
-```
-
-## Customization
-
-**Config files are symlinked** - edit directly in the repo and changes apply immediately:
-
-```bash
-# Example: Edit WezTerm config
-vim wezterm/.config/wezterm/wezterm.lua
-
-# Changes are live, commit to track
-git add wezterm/
-git commit -m "Update wezterm theme"
-```
-
-**Add Python tools:** Edit `ansible/roles/dotfiles/tasks/main.yml`:
-
-```yaml
-loop:
-  - ruff
-  - pyright
-  - your-tool  # Add here
 ```
 
 ## Troubleshooting
