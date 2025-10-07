@@ -1,215 +1,197 @@
-"$schema" = 'https://starship.rs/config-schema.json'
+[aws]
+format = '\[[$symbol($profile)(\($region\))(\[$duration\])]($style)\]'
 
-format = """
-[](subtext1)\
-$os\
-$username\
-[](bg:teal fg:subtext1)\
-$directory\
-[](bg:mauve fg:teal)\
-$git_branch\
-$git_status\
-[](fg:mauve bg:flamingo)\
-$c\
-$rust\
-$golang\
-$nodejs\
-$php\
-$java\
-$kotlin\
-$haskell\
-$python\
-[](fg:flamingo bg:orange)\
-$conda\
-[](fg:orange bg:yellow)\
-$time\
-[ ](fg:yellow)\
-$cmd_duration\
-$line_break\
-$character"""
-
-palette = 'draculaplus'
-
-[os]
-disabled = false
-style = "bg:subtext1 fg:crust"
-
-[os.symbols]
-Windows = ""
-Ubuntu = "󰕈"
-SUSE = ""
-Raspbian = "󰐿"
-Mint = "󰣭"
-Macos = "󰀵"
-Manjaro = ""
-Linux = "󰌽"
-Gentoo = "󰣨"
-Fedora = "󰣛"
-Alpine = ""
-Amazon = ""
-Android = ""
-Arch = "󰣇"
-Artix = "󰣇"
-CentOS = ""
-Debian = "󰣚"
-Redhat = "󱄛"
-RedHatEnterprise = "󱄛"
-
-[username]
-show_always = false
-style_user = "bg:red fg:crust"
-style_root = "bg:red fg:crust"
-format = '[ $user]($style)'
-
-[directory]
-style = "bg:teal fg:crust"
-format = "[ $path ]($style)"
-truncation_length = 3
-truncation_symbol = "…/"
-
-[directory.substitutions]
-"Documents" = "󰈙 "
-"Downloads" = " "
-"Music" = "󰝚 "
-"Pictures" = " "
-"Developer" = "󰲋 "
-
-[git_branch]
-symbol = ""
-style = "bg:mauve"
-format = '[[ $symbol $branch ](fg:crust bg:mauve)]($style)'
-
-[git_status]
-style = "bg:mauve"
-format = '[[($all_status$ahead_behind )](fg:crust bg:mauve)]($style)'
-
-[nodejs]
-symbol = ""
-style = "bg:flamingo"
-format = '[[ $symbol( $version) ](fg:crust bg:flamingo)]($style)'
+[bun]
+format = '\[[$symbol($version)]($style)\]'
 
 [c]
-symbol = " "
-style = "bg:flamingo"
-format = '[[ $symbol( $version) ](fg:crust bg:flamingo)]($style)'
+format = '\[[$symbol($version(-$name))]($style)\]'
 
-[rust]
-symbol = ""
-style = "bg:flamingo"
-format = '[[ $symbol( $version) ](fg:crust bg:flamingo)]($style)'
+[cpp]
+format = '\[[$symbol($version(-$name))]($style)\]'
 
-[golang]
-symbol = ""
-style = "bg:flamingo"
-format = '[[ $symbol( $version) ](fg:crust bg:flamingo)]($style)'
-
-[php]
-symbol = ""
-style = "bg:flamingo"
-format = '[[ $symbol( $version) ](fg:crust bg:flamingo)]($style)'
-
-[java]
-symbol = " "
-style = "bg:flamingo"
-format = '[[ $symbol( $version) ](fg:crust bg:flamingo)]($style)'
-
-[kotlin]
-symbol = ""
-style = "bg:flamingo"
-format = '[[ $symbol( $version) ](fg:crust bg:flamingo)]($style)'
-
-[haskell]
-symbol = ""
-style = "bg:flamingo"
-format = '[[ $symbol( $version) ](fg:crust bg:flamingo)]($style)'
-
-[python]
-symbol = ""
-style = "bg:flamingo"
-format = '[[ $symbol( $version)(\(#$virtualenv\)) ](fg:crust bg:flamingo)]($style)'
-
-[docker_context]
-symbol = ""
-style = "bg:sapphire"
-format = '[[ $symbol( $context) ](fg:crust bg:sapphire)]($style)'
-
-[conda]
-symbol = "  "
-style = "fg:crust bg:orange"
-format = '[$symbol$environment ]($style)'
-ignore_base = false
-
-[time]
-disabled = false
-time_format = "%R"
-style = "bg:yellow"
-format = '[[  $time ](fg:crust bg:yellow)]($style)'
-
-[line_break]
-disabled = false
-
-[character]
-disabled = false
-success_symbol = '[❯](bold fg:green)'
-error_symbol = '[❯](bold fg:red)'
-vimcmd_symbol = '[❮](bold fg:green)'
-vimcmd_replace_one_symbol = '[❮](bold fg:lavender)'
-vimcmd_replace_symbol = '[❮](bold fg:lavender)'
-vimcmd_visual_symbol = '[❮](bold fg:yellow)'
+[cmake]
+format = '\[[$symbol($version)]($style)\]'
 
 [cmd_duration]
-show_milliseconds = true
-format = " in $duration "
-style = "bg:lavender"
-disabled = false
-show_notifications = true
-min_time_to_notify = 45000
+format = '\[[⏱ $duration]($style)\]'
 
-[palettes.draculaplus]
-# DraculaPlus theme colors - toned down for less vibrant appearance
-background = "#212121"
-black = "#21222C"
-blue = "#6B7EE0"
-bright_black = "#545454"
-bright_blue = "#8B9EE0"
-bright_cyan = "#7BC4D4"
-bright_green = "#5BC79B"
-bright_purple = "#C085C8"
-bright_red = "#E85A5A"
-bright_white = "#E8E8E2"
-bright_yellow = "#D4B85A"
-cursor = "#E8E8E2"
-cyan = "#70D1E8"
-foreground = "#E8E8E2"
-green = "#4AC76B"
-purple = "#B284C4"
-red = "#E64545"
-selection = "#44475A"
-white = "#E8E8E2"
-yellow = "#F0C674"
-orange = "#ff8700"
+[cobol]
+format = '\[[$symbol($version)]($style)\]'
 
-# Mapped colors for Starship segments
-# Using toned down DraculaPlus colors
-rosewater = "#E8E8E2"
-flamingo = "#E85A5A"
-pink = "#a363ba"
-mauve = "#B284C4"
-maroon = "#E64545"
-peach = "#F0C674"
-teal = "#7BC4D4"
-sky = "#8B9EE0"
-sapphire = "#6B7EE0"
-lavender = "#545454"
-text = "#E8E8E2"
-subtext1 = "#D4D4CE"
-subtext0 = "#C0C0BA"
-overlay2 = "#545454"
-overlay1 = "#44475A"
-overlay0 = "#383A59"
-surface2 = "#44475A"
-surface1 = "#383A59"
-surface0 = "#2C2E3E"
-base = "#212121"
-mantle = "#1E1E1E"
-crust = "#21222C"
+[conda]
+format = '\[[$symbol$environment]($style)\]'
+
+[crystal]
+format = '\[[$symbol($version)]($style)\]'
+
+[daml]
+format = '\[[$symbol($version)]($style)\]'
+
+[dart]
+format = '\[[$symbol($version)]($style)\]'
+
+[deno]
+format = '\[[$symbol($version)]($style)\]'
+
+[docker_context]
+format = '\[[$symbol$context]($style)\]'
+
+[dotnet]
+format = '\[[$symbol($version)(🎯 $tfm)]($style)\]'
+
+[elixir]
+format = '\[[$symbol($version \(OTP $otp_version\))]($style)\]'
+
+[elm]
+format = '\[[$symbol($version)]($style)\]'
+
+[erlang]
+format = '\[[$symbol($version)]($style)\]'
+
+[fennel]
+format = '\[[$symbol($version)]($style)\]'
+
+[fossil_branch]
+format = '\[[$symbol$branch]($style)\]'
+
+[gcloud]
+format = '\[[$symbol$account(@$domain)(\($region\))]($style)\]'
+
+[git_branch]
+format = '\[[$symbol$branch]($style)\]'
+
+[git_status]
+format = '([\[$all_status$ahead_behind\]]($style))'
+
+[golang]
+format = '\[[$symbol($version)]($style)\]'
+
+[gradle]
+format = '\[[$symbol($version)]($style)\]'
+
+[guix_shell]
+format = '\[[$symbol]($style)\]'
+
+[haskell]
+format = '\[[$symbol($version)]($style)\]'
+
+[haxe]
+format = '\[[$symbol($version)]($style)\]'
+
+[helm]
+format = '\[[$symbol($version)]($style)\]'
+
+[hg_branch]
+format = '\[[$symbol$branch]($style)\]'
+
+[java]
+format = '\[[$symbol($version)]($style)\]'
+
+[julia]
+format = '\[[$symbol($version)]($style)\]'
+
+[kotlin]
+format = '\[[$symbol($version)]($style)\]'
+
+[kubernetes]
+format = '\[[$symbol$context( \($namespace\))]($style)\]'
+
+[lua]
+format = '\[[$symbol($version)]($style)\]'
+
+[memory_usage]
+format = '\[$symbol[$ram( | $swap)]($style)\]'
+
+[meson]
+format = '\[[$symbol$project]($style)\]'
+
+[nim]
+format = '\[[$symbol($version)]($style)\]'
+
+[nix_shell]
+format = '\[[$symbol$state( \($name\))]($style)\]'
+
+[nodejs]
+format = '\[[$symbol($version)]($style)\]'
+
+[ocaml]
+format = '\[[$symbol($version)(\($switch_indicator$switch_name\))]($style)\]'
+
+[opa]
+format = '\[[$symbol($version)]($style)\]'
+
+[openstack]
+format = '\[[$symbol$cloud(\($project\))]($style)\]'
+
+[os]
+format = '\[[$symbol]($style)\]'
+
+[package]
+format = '\[[$symbol$version]($style)\]'
+
+[perl]
+format = '\[[$symbol($version)]($style)\]'
+
+[php]
+format = '\[[$symbol($version)]($style)\]'
+
+[pijul_channel]
+format = '\[[$symbol$channel]($style)\]'
+
+[pixi]
+format = '\[[$symbol$version( $environment)]($style)\]'
+
+[pulumi]
+format = '\[[$symbol$stack]($style)\]'
+
+[purescript]
+format = '\[[$symbol($version)]($style)\]'
+
+[python]
+format = '\[[${symbol}${pyenv_prefix}(${version})(\($virtualenv\))]($style)\]'
+
+[raku]
+format = '\[[$symbol($version-$vm_version)]($style)\]'
+
+[red]
+format = '\[[$symbol($version)]($style)\]'
+
+[ruby]
+format = '\[[$symbol($version)]($style)\]'
+
+[rust]
+format = '\[[$symbol($version)]($style)\]'
+
+[scala]
+format = '\[[$symbol($version)]($style)\]'
+
+[spack]
+format = '\[[$symbol$environment]($style)\]'
+
+[sudo]
+format = '\[[as $symbol]($style)\]'
+
+[swift]
+format = '\[[$symbol($version)]($style)\]'
+
+[terraform]
+format = '\[[$symbol$workspace]($style)\]'
+
+[time]
+format = '\[[$time]($style)\]'
+
+[username]
+format = '\[[$user]($style)\]'
+
+[vagrant]
+format = '\[[$symbol($version)]($style)\]'
+
+[vlang]
+format = '\[[$symbol($version)]($style)\]'
+
+[zig]
+format = '\[[$symbol($version)]($style)\]'
+
+[solidity]
+format = '\[[$symbol($version)]($style)\]'
