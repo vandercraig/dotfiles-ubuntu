@@ -1,0 +1,53 @@
+# Pre-commit hooks for code quality
+repos:
+  # General file checks
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+    args: [--allow-multiple-documents]
+  - id: check-added-large-files
+    args: [--maxkb=1024]
+  - id: check-case-conflict
+  - id: check-merge-conflict
+  - id: check-executables-have-shebangs
+  - id: check-shebang-scripts-are-executable
+  - id: mixed-line-ending
+    args: [--fix=lf]
+
+  # Shell script linting
+- repo: https://github.com/shellcheck-py/shellcheck-py
+  rev: v0.9.0.6
+  hooks:
+  - id: shellcheck
+    files: \.(sh|bash)$
+    args: [--severity=warning]
+
+  # YAML formatting
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.12.0
+  hooks:
+  - id: pretty-format-yaml
+    args:
+    - --autofix
+    - --indent=2
+    - --preserve-quotes
+    exclude: ^\.github/
+
+  # Markdown linting
+- repo: https://github.com/igorshubovych/markdownlint-cli
+  rev: v0.39.0
+  hooks:
+  - id: markdownlint
+    args: [--fix]
+    exclude: ^INSTALLED_COMPONENTS\.md$
+
+  # Check for secrets
+- repo: https://github.com/Yelp/detect-secrets
+  rev: v1.4.0
+  hooks:
+  - id: detect-secrets
+    args: [--baseline, .secrets.baseline]
+    exclude: (package.lock.json|lazy-lock.json)
