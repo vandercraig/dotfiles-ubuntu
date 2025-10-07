@@ -1,14 +1,13 @@
----
 - name: Setup Development Environment
   hosts: local
   become: yes
   vars:
     user_home: "{{ lookup('env', 'HOME') }}"
     dotfiles_repo: "{{ playbook_dir | dirname }}"
-  
+
   roles:
-    - role: dotfiles
-      tags: ['base', 'always']
-    
-    - role: personal
-      tags: ['personal']
+  - role: dotfiles
+    tags: ['base', 'always']
+
+  - role: personal
+    tags: ['personal']

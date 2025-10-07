@@ -38,9 +38,9 @@ create_symlink() {
     local source_path="$1"
     local target_path="$2"
     local backup_path="${target_path}.backup"
-    
+
     print_status "Processing: $target_path"
-    
+
     # Check if target already exists
     if [ -e "$target_path" ] || [ -L "$target_path" ]; then
         # Check if it's already a symlink to our source
@@ -48,20 +48,20 @@ create_symlink() {
             print_success "Symlink already exists and points to correct location: $target_path"
             return 0
         fi
-        
+
         # Create backup
         print_warning "Existing file/directory found. Creating backup: $backup_path"
-        
+
         # Remove existing backup if it exists
         if [ -e "$backup_path" ]; then
             rm -rf "$backup_path"
         fi
-        
+
         # Move existing file/directory to backup
         mv "$target_path" "$backup_path"
         print_success "Backup created: $backup_path"
     fi
-    
+
     # Create the symlink
     ln -s "$source_path" "$target_path"
     print_success "Symlink created: $target_path -> $source_path"

@@ -53,7 +53,7 @@ fi
 stow_packages() {
     print_status "Installing dotfiles via stow..."
     cd "$SCRIPT_DIR"
-    
+
     for package in "${PACKAGES[@]}"; do
         print_status "Stowing $package..."
         if stow -v -t "$HOME" "$package" 2>&1 | grep -q "LINK:"; then
@@ -62,7 +62,7 @@ stow_packages() {
             print_warning "$package already configured or no changes needed"
         fi
     done
-    
+
     print_success "All dotfiles installed!"
 }
 
@@ -70,12 +70,12 @@ stow_packages() {
 unstow_packages() {
     print_status "Removing dotfiles symlinks..."
     cd "$SCRIPT_DIR"
-    
+
     for package in "${PACKAGES[@]}"; do
         print_status "Unstowing $package..."
         stow -D -t "$HOME" "$package" 2>/dev/null || print_warning "$package not stowed"
     done
-    
+
     print_success "All dotfiles removed!"
 }
 
@@ -83,12 +83,12 @@ unstow_packages() {
 restow_packages() {
     print_status "Re-stowing dotfiles..."
     cd "$SCRIPT_DIR"
-    
+
     for package in "${PACKAGES[@]}"; do
         print_status "Re-stowing $package..."
         stow -R -t "$HOME" "$package"
     done
-    
+
     print_success "All dotfiles re-stowed!"
 }
 

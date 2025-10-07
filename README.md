@@ -5,6 +5,7 @@ Automated setup for Ubuntu development environment using **Ansible** (packages) 
 ## What Gets Installed
 
 ### Core Components
+
 - **WezTerm**: A powerful, GPU-accelerated terminal emulator (installed on non-WSL systems).
 - **Zsh**: A modern shell with powerful features.
 - **Nushell**: A modern, cross-platform shell.
@@ -12,6 +13,7 @@ Automated setup for Ubuntu development environment using **Ansible** (packages) 
 - **zsh-autosuggestions & zsh-syntax-highlighting**: Essential plugins for an enhanced Zsh experience.
 
 ### Python Development
+
 - **uv**: A fast Python package installer and resolver.
 - **Python 3.12**: Installed via `uv`.
 - **Ruff**: A fast Python linter and formatter.
@@ -20,6 +22,7 @@ Automated setup for Ubuntu development environment using **Ansible** (packages) 
 - **pre-commit**: A framework for managing Git pre-commit hooks.
 
 ### Data Engineering Tools
+
 - **DuckDB**: An in-process SQL OLAP database management system.
 - **Datasette**: A tool for exploring and publishing data.
 - **LiteCLI**: An enhanced CLI for SQLite.
@@ -27,6 +30,7 @@ Automated setup for Ubuntu development environment using **Ansible** (packages) 
 - **Rich-CLI**: A tool for rich text and beautiful formatting in the terminal.
 
 ### Development Utilities
+
 - **Just**: A command runner.
 - **Claude Code**: Anthropic's CLI tool.
 - **Gemini CLI**: Google's generative AI CLI.
@@ -38,6 +42,7 @@ Automated setup for Ubuntu development environment using **Ansible** (packages) 
 ## Quick Start
 
 ### 1. Install a Nerd Font
+
 For icons to render correctly in the terminal, download and install a Nerd Font from [nerdfonts.com](https://www.nerdfonts.com/).
 Recommended fonts: FiraCode Nerd Font, JetBrains Mono Nerd Font.
 
@@ -63,6 +68,7 @@ cd ..
 ```
 
 The Ansible playbook will:
+
 - Install all packages (system tools, dev tools, neovim, etc.)
 - Install WezTerm (skipped on WSL)
 - Install GNU Stow for config management
@@ -85,6 +91,7 @@ See `ansible/README.md` for more details about package installation.
 ```
 
 **Active Symlinks:**
+
 - `~/.zshrc` → `zsh/.zshrc`
 - `~/.config/nvim` → `nvim/.config/nvim`
 - `~/.config/nushell` → `nushell/.config/nushell`
@@ -97,9 +104,24 @@ See `ansible/README.md` for more details about package installation.
 - **Restart terminal** or run `source ~/.zshrc`
 - WezTerm auto-skipped on WSL systems
 
+### 5. Code Quality (Optional)
+
+If you modify configs, pre-commit hooks maintain code quality:
+
+```bash
+# Install direnv (handles pre-commit auto-install)
+sudo apt install direnv
+eval "$(direnv hook zsh)"  # Add to ~/.zshrc
+direnv allow
+
+# Or install pre-commit manually
+pre-commit install
+pre-commit run --all-files  # Run checks
+```
+
 ## Structure
 
-```
+```bash
 ansible/               # Package installation
   playbook.yml         # Main automation
   roles/dotfiles/tasks/main.yml
@@ -127,6 +149,7 @@ git commit -m "Update wezterm theme"
 ```
 
 **Add Python tools:** Edit `ansible/roles/dotfiles/tasks/main.yml`:
+
 ```yaml
 loop:
   - ruff
@@ -137,6 +160,7 @@ loop:
 ## Troubleshooting
 
 **Stow conflicts:** Backup existing configs before stowing
+
 ```bash
 mkdir -p ~/dotfiles-backups && mv ~/.zshrc ~/.config/nvim ~/dotfiles-backups/
 ./stow.sh install

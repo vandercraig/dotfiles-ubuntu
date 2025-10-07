@@ -235,39 +235,39 @@ fi
 # Install Python tools via uv
 if command -v uv &> /dev/null; then
     print_status "Installing Python development tools via uv..."
-    
+
     # Install ruff (Python linter/formatter)
     uv tool install ruff
     print_success "Ruff (Python linter/formatter) installed via uv"
-    
+
     # Install pre-commit (Git hooks framework)
     uv tool install pre-commit
     print_success "pre-commit installed via uv"
-    
+
     # Install pyright
     uv tool install pyright
     print_success "Pyright (Python type checker) installed via uv"
-    
+
     # Install bandit
     uv tool install bandit
     print_success "Bandit (security linter) installed via uv"
-    
+
     # Install datasette
     uv tool install datasette
     print_success "Datasette (instant web API for datasets) installed via uv"
-    
+
     # Install litecli
     uv tool install litecli
     print_success "LiteCLI (enhanced SQLite CLI) installed via uv"
-    
+
     # Install csvkit
     uv tool install csvkit
     print_success "CSVKit (CSV utilities) installed via uv"
-    
+
     # Install rich-cli
     uv tool install rich-cli
     print_success "Rich-CLI (beautiful terminal output) installed via uv"
-    
+
     # Install pytest
     uv tool install pytest
     print_success "pytest installed via uv"

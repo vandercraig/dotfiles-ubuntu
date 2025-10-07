@@ -81,6 +81,10 @@ venv.bak/
 .env.test.local
 .env.production.local
 
+# Direnv
+.direnv/
+.envrc.local
+
 # SSH keys and sensitive data
 id_rsa
 id_rsa.pub
@@ -117,3 +121,6 @@ site/
 # Misc
 *.orig
 .Trash/
+
+# Pre-commit
+.pre-commit-cache/

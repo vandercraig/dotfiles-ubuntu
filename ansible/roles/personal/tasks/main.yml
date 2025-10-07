@@ -1,4 +1,3 @@
----
 # Install Dropbox headless daemon
 - name: Check if Dropbox daemon is installed
   stat:
@@ -12,24 +11,24 @@
 
 - name: Download and install Dropbox daemon
   block:
-    - name: Download Dropbox tarball
-      get_url:
-        url: https://www.dropbox.com/download?plat=lnx.x86_64
-        dest: /tmp/dropbox.tar.gz
-        mode: '0644'
-      become: no
-    
-    - name: Extract Dropbox to home directory
-      unarchive:
-        src: /tmp/dropbox.tar.gz
-        dest: "{{ user_home }}"
-        remote_src: yes
-      become: no
-    
-    - name: Clean up Dropbox tarball
-      file:
-        path: /tmp/dropbox.tar.gz
-        state: absent
+  - name: Download Dropbox tarball
+    get_url:
+      url: https://www.dropbox.com/download?plat=lnx.x86_64
+      dest: /tmp/dropbox.tar.gz
+      mode: '0644'
+    become: no
+
+  - name: Extract Dropbox to home directory
+    unarchive:
+      src: /tmp/dropbox.tar.gz
+      dest: "{{ user_home }}"
+      remote_src: yes
+    become: no
+
+  - name: Clean up Dropbox tarball
+    file:
+      path: /tmp/dropbox.tar.gz
+      state: absent
   when: not dropbox_daemon.stat.exists
 
 - name: Download Dropbox CLI Python script
@@ -48,21 +47,21 @@
 
 - name: Install Tailscale
   block:
-    - name: Download Tailscale installation script
-      get_url:
-        url: https://tailscale.com/install.sh
-        dest: /tmp/tailscale-install.sh
-        mode: '0755'
-    
-    - name: Run Tailscale installation script
-      shell: sh /tmp/tailscale-install.sh
-      args:
-        creates: /usr/bin/tailscale
-    
-    - name: Clean up Tailscale installation script
-      file:
-        path: /tmp/tailscale-install.sh
-        state: absent
+  - name: Download Tailscale installation script
+    get_url:
+      url: https://tailscale.com/install.sh
+      dest: /tmp/tailscale-install.sh
+      mode: '0755'
+
+  - name: Run Tailscale installation script
+    shell: sh /tmp/tailscale-install.sh
+    args:
+      creates: /usr/bin/tailscale
+
+  - name: Clean up Tailscale installation script
+    file:
+      path: /tmp/tailscale-install.sh
+      state: absent
   when: tailscale_check.rc != 0
 
 - name: Enable Tailscale service

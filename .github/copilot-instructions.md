@@ -3,6 +3,7 @@
 ## Project Overview
 
 This is an Ubuntu development environment setup using a two-phase approach:
+
 1. **Ansible** - Package installation and system configuration
 2. **GNU Stow** - Dotfiles symlink management
 
@@ -16,12 +17,14 @@ This is an Ubuntu development environment setup using a two-phase approach:
 ## Key Technical Details
 
 ### Stow Configuration
+
 - All Stow commands use `-t $HOME` flag (required when not running from parent of target)
 - Package array: `zsh`, `nvim`, `starship`, `nushell`, `wezterm` (conditional on WSL)
 - Directory structure: `<package>/.config/<app>/` → `~/.config/<app>/`
 - Symlinks use relative paths for portability
 
 ### Ansible Patterns
+
 ```yaml
 # WSL Detection
 - name: Check if running on WSL
@@ -46,6 +49,7 @@ when: is_wsl.rc != 0  # Install only when NOT on WSL
 ```
 
 ### Ubuntu Package Quirks
+
 - `bat` → `batcat` (requires symlink: `ln -s /usr/bin/batcat ~/.local/bin/bat`)
 - `fd` → `fdfind` (requires symlink: `ln -s /usr/bin/fdfind ~/.local/bin/fd`)
 - Always create these symlinks after installing packages
@@ -53,15 +57,18 @@ when: is_wsl.rc != 0  # Install only when NOT on WSL
 ### Tool-Specific Notes
 
 **Neovim**:
+
 - Requires version 0.11+ for NvChad compatibility
 - Installed via AppImage from: `https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage`
 - Make executable and symlink to `~/.local/bin/nvim`
 
 **WezTerm**:
+
 - Skip on WSL (GUI app)
 - Install via apt repository with key verification
 
 **Python Tools (uv)**:
+
 - Install via standalone installer: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - Use `uv tool install <package>` for global Python tools
 - Never use `sudo` with `uv` commands
@@ -69,12 +76,14 @@ when: is_wsl.rc != 0  # Install only when NOT on WSL
 ## Code Style Preferences
 
 ### Shell Scripts
+
 - Use `#!/usr/bin/env bash` for portability
 - Include explicit error messages with context
 - Use functions for reusable logic
 - Check prerequisites before execution
 
 ### Ansible Tasks
+
 - Always include `name:` field with clear descriptions
 - Use `register:` for command outputs that need checking
 - Set `changed_when: false` for read-only operations
@@ -82,6 +91,7 @@ when: is_wsl.rc != 0  # Install only when NOT on WSL
 - Group related tasks with comments
 
 ### Documentation
+
 - Keep README concise ("pithy")
 - Use code blocks with language hints
 - Show examples inline, not separate files
@@ -90,13 +100,16 @@ when: is_wsl.rc != 0  # Install only when NOT on WSL
 ## Common Patterns
 
 ### Adding New Stow Package
+
 1. Create directory: `<package>/.config/<app>/`
 2. Move configs into the directory
 3. Add package name to `PACKAGES` array in `stow.sh`
 4. Test with `./stow.sh restow`
 
 ### Adding New Python Tool
+
 Edit `ansible/roles/dotfiles/tasks/main.yml`:
+
 ```yaml
 - name: Install Python development tools via uv
   shell: "{{ user_home }}/.local/bin/uv tool install {{ item }}"
@@ -107,6 +120,7 @@ Edit `ansible/roles/dotfiles/tasks/main.yml`:
 ```
 
 ### Handling Conflicts
+
 - Backup existing configs to `~/dotfiles-backups/` before stowing
 - Use `mv` not `rm` to preserve user data
 - Document backup location in output messages
@@ -114,6 +128,7 @@ Edit `ansible/roles/dotfiles/tasks/main.yml`:
 ## Testing Checklist
 
 When making changes to automation:
+
 - [ ] Test on fresh Ubuntu system if possible
 - [ ] Verify WSL detection works correctly
 - [ ] Check all symlinks created: `ls -la ~/.config/`
