@@ -35,6 +35,9 @@
       - python3-pip
       - python3-venv
       - stow
+      - gh
+      - pass
+      - direnv
     state: present
 
 # Install Neovim (version 0.11+ required for NvChad)
@@ -80,7 +83,7 @@
 - name: Check if running on WSL
   shell: grep -qi microsoft /proc/version
   register: is_wsl
-  ignore_errors: yes
+  failed_when: false
   changed_when: false
 
 - name: Check if WezTerm is installed
@@ -236,7 +239,6 @@
     - pyright
     - bandit
     - pre-commit
-    - duckdb
     - datasette
     - litecli
     - csvkit
