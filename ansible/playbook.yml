@@ -1,0 +1,10 @@
+---
+- name: Setup Development Environment
+  hosts: local
+  become: yes
+  vars:
+    user_home: "{{ lookup('env', 'HOME') }}"
+    dotfiles_repo: "{{ playbook_dir | dirname }}"
+  
+  roles:
+    - dotfiles

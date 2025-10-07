@@ -1,6 +1,6 @@
 # Development Environment Setup
 
-This repository contains scripts and configurations to set up a development environment on Ubuntu, with a focus on Python data engineering.
+Automated setup for Ubuntu development environment using **Ansible** (packages) and **GNU Stow** (config symlinks).
 
 ## What Gets Installed
 
@@ -44,119 +44,124 @@ Recommended fonts: FiraCode Nerd Font, JetBrains Mono Nerd Font.
 After installation, configure your terminal to use the chosen Nerd Font.
 
 ### 2. Clone and Run Setup
+
 ```bash
 # Clone this repository
-git clone <your-repo-url>
-cd <repo-name>
+git clone https://github.com/vandercraig/dotfiles-ubuntu.git
+cd dotfiles-ubuntu
 
-# Make the setup script executable and run it
-chmod +x env_setup.sh
-./env_setup.sh
+# Install Ansible if not already installed
+sudo apt update && sudo apt install -y ansible
+
+# Run the Ansible playbook to install packages
+cd ansible
+ansible-playbook playbook.yml --ask-become-pass
+
+# Return to root and link config files with Stow
+cd ..
+./stow.sh install
 ```
 
-### 3. Apply Shell & Terminal Configuration
+The Ansible playbook will:
+- Install all packages (system tools, dev tools, neovim, etc.)
+- Install WezTerm (skipped on WSL)
+- Install GNU Stow for config management
+- Configure your shell environment
+- Set zsh as default shell
 
-#### For Zsh
+See `ansible/README.md` for more details about package installation.
+
+### 3. Manage Dotfiles
+
 ```bash
-# Copy the Zsh configuration
-cp .zshrc ~/.zshrc
+# Install/link all configs
+./stow.sh install
 
-# Restart your terminal or reload the configuration
-source ~/.zshrc
+# Uninstall/unlink all configs
+./stow.sh uninstall
+
+# Re-link after making changes
+./stow.sh restow
 ```
 
-#### For WezTerm
-```bash
-# Create the config directory if it doesn't exist
-mkdir -p ~/.config/wezterm
+**Active Symlinks:**
+- `~/.zshrc` → `zsh/.zshrc`
+- `~/.config/nvim` → `nvim/.config/nvim`
+- `~/.config/nushell` → `nushell/.config/nushell`
+- `~/.config/wezterm/wezterm.lua` → `wezterm/.config/wezterm/wezterm.lua`
+- `~/.config/starship.toml` → `starship/.config/starship.toml`
 
-# Copy the WezTerm configuration
-cp wezterm.lua ~/.config/wezterm/wezterm.lua
+### 4. Post-Installation
+
+- **Log out and back in** for shell/Docker group changes
+- **Restart terminal** or run `source ~/.zshrc`
+- WezTerm auto-skipped on WSL systems
+
+## Structure
+
 ```
+ansible/               # Package installation
+  playbook.yml         # Main automation
+  roles/dotfiles/tasks/main.yml
 
-#### For Nushell
-See `nushell-setup.md` for instructions on configuring Nushell with Starship.
+zsh/.zshrc            # → ~/.zshrc
+nvim/.config/nvim/    # → ~/.config/nvim
+wezterm/.config/      # → ~/.config/wezterm
+starship/.config/     # → ~/.config/starship.toml
+nushell/.config/      # → ~/.config/nushell
 
-## Repository Structure
-
-```
-.
-├── env_setup.sh              # Main setup script
-├── .zshrc                    # Zsh configuration
-├── wezterm.lua               # WezTerm terminal configuration
-├── nushell-setup.md          # Nushell setup guide
-├── starship/starship_theme.toml # Custom Starship theme
-├── terminal-theme.jsonc      # Color schemes for other terminals (e.g., Windows Terminal)
-├── README.md                 # This file
-└── INSTALLED_COMPONENTS.md   # Auto-generated list of installed components
+stow.sh               # Symlink helper
 ```
 
 ## Customization
 
-### WezTerm Personalization
-The `wezterm.lua` configuration is parameterized for easy customization. Open the file and edit the `user_params` table at the top to change your theme, background image, font, and more.
+**Config files are symlinked** - edit directly in the repo and changes apply immediately:
 
-**Example:**
-```lua
--- In wezterm.lua
-local user_params = {
-  color_scheme = 'kanagawabones', -- or 'tokyonight'
-  background_image_path = '/path/to/your/image.png',
-  font = 'FiraCode Nerd Font',
-  font_size = 12.0,
-  background_tint_opacity = 0.85,
-}
+```bash
+# Example: Edit WezTerm config
+vim wezterm/.config/wezterm/wezterm.lua
+
+# Changes are live, commit to track
+git add wezterm/
+git commit -m "Update wezterm theme"
 ```
 
-### Adding `uv` Tools
-Edit `env_setup.sh` to add new Python tools installed via `uv`. `uv` handles cases where the tool is already installed.
-
-**Example:**
-```bash
-# In env_setup.sh
-uv tool install <tool-name>
-print_success "<Tool description> installed via uv"
+**Add Python tools:** Edit `ansible/roles/dotfiles/tasks/main.yml`:
+```yaml
+loop:
+  - ruff
+  - pyright
+  - your-tool  # Add here
 ```
 
 ## Troubleshooting
 
-### Font and Icon Issues
-- **Missing icons**: Ensure a Nerd Font is installed and configured in your terminal (e.g., in `wezterm.lua`).
-- **Broken symbols**: Restart your terminal after setting the font.
-
-### Shell Issues
-- **Zsh not default**: Run `chsh -s $(which zsh)` and restart the terminal.
-- **Starship not loading**: Check that `eval "$(starship init zsh)"` is at the end of your `.zshrc`.
-
-### `uv` Issues
-- **`uv` command not found**: Restart your terminal or run `source ~/.zshrc`. The installer adds it to your shell's PATH.
-- **Permission errors**: Do not use `sudo` with `uv` commands.
-
-## Maintenance
-
-### Update Components
+**Stow conflicts:** Backup existing configs before stowing
 ```bash
-# Update system packages
-sudo apt update && sudo apt upgrade -y
-
-# Update Starship
-curl -sS https://starship.rs/install.sh | sh -s -- --yes
-
-# Update uv and all installed tools
-uv self update
-uv tool upgrade --all
-
-# Update Node.js global packages
-npm update -g
+mkdir -p ~/dotfiles-backups && mv ~/.zshrc ~/.config/nvim ~/dotfiles-backups/
+./stow.sh install
 ```
 
-### Backup Configuration
+**Tools not found:** Restart terminal or add to `~/.zshrc`: `export PATH="$HOME/.local/bin:$PATH"`
+
+**Missing icons:** Install a Nerd Font and configure in `wezterm.lua`
+
+**Zsh not default:** Run `chsh -s $(which zsh)` and restart terminal
+
+## Updates
+
 ```bash
-# Backup important configs
-cp ~/.zshrc ~/zshrc.backup
-cp ~/.config/starship.toml ~/starship.toml.backup
-cp ~/.config/wezterm/wezterm.lua ~/wezterm.lua.backup
-cp -r ~/.config/nushell ~/nushell.backup
+# System packages
+sudo apt update && apt upgrade -y
+
+# Starship
+curl -sS https://starship.rs/install.sh | sh -s -- --yes
+
+# Python tools
+uv self update && uv tool upgrade --all
+
+# Node packages
+npm update -g
 ```
 
 ## License

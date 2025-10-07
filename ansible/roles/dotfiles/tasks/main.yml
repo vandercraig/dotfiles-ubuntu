@@ -1,0 +1,304 @@
+---
+# Update system packages
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+
+# Install base system packages
+- name: Install base packages
+  apt:
+    name:
+      - git
+      - curl
+      - wget
+      - build-essential
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - zsh
+      - tree
+      - htop
+      - jq
+      - sqlite3
+      - unzip
+      - zip
+      - ripgrep
+      - fd-find
+      - bat
+      - python3-pip
+      - python3-venv
+      - stow
+    state: present
+
+# Install Neovim (version 0.11+ required for NvChad)
+- name: Check if Neovim is installed
+  command: which nvim
+  register: nvim_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Check Neovim version if installed
+  shell: nvim --version | head -n1 | grep -oP 'v\K[0-9]+\.[0-9]+'
+  register: nvim_version
+  ignore_errors: yes
+  changed_when: false
+  when: nvim_check.rc == 0
+
+- name: Determine if Neovim needs installation
+  set_fact:
+    needs_nvim_install: "{{ nvim_check.rc != 0 or (nvim_version.stdout is defined and nvim_version.stdout != '' and nvim_version.stdout is version('0.11', '<')) }}"
+
+- name: Install Neovim from AppImage
+  block:
+    - name: Download Neovim stable AppImage (v0.11.4+)
+      get_url:
+        url: https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage
+        dest: /tmp/nvim.appimage
+        mode: '0755'
+    
+    - name: Install Neovim AppImage to /usr/local/bin
+      copy:
+        src: /tmp/nvim.appimage
+        dest: /usr/local/bin/nvim
+        mode: '0755'
+        remote_src: yes
+    
+    - name: Clean up AppImage download
+      file:
+        path: /tmp/nvim.appimage
+        state: absent
+  when: needs_nvim_install
+
+# Install WezTerm (skip on WSL)
+- name: Check if running on WSL
+  shell: grep -qi microsoft /proc/version
+  register: is_wsl
+  ignore_errors: yes
+  changed_when: false
+
+- name: Check if WezTerm is installed
+  command: which wezterm
+  register: wezterm_check
+  ignore_errors: yes
+  changed_when: false
+  when: is_wsl.rc != 0
+
+- name: Install WezTerm
+  block:
+    - name: Download WezTerm GPG key
+      get_url:
+        url: https://apt.fury.io/wez/gpg.key
+        dest: /tmp/wezterm-fury.gpg
+
+    - name: Add WezTerm GPG key
+      shell: |
+        cat /tmp/wezterm-fury.gpg | gpg --dearmor -o /usr/share/keyrings/wezterm-fury.gpg
+      args:
+        creates: /usr/share/keyrings/wezterm-fury.gpg
+
+    - name: Add WezTerm repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *"
+        state: present
+        filename: wezterm
+
+    - name: Install WezTerm
+      apt:
+        name: wezterm
+        state: present
+        update_cache: yes
+
+    - name: Clean up WezTerm GPG key download
+      file:
+        path: /tmp/wezterm-fury.gpg
+        state: absent
+  when: is_wsl.rc != 0 and wezterm_check.rc != 0
+
+# Install Nushell
+- name: Check if Nushell is installed
+  command: which nu
+  register: nushell_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Download and install Nushell
+  shell: |
+    curl -LO https://github.com/nushell/nushell/releases/latest/download/nu-0.96.1-x86_64-unknown-linux-musl.tar.gz
+    tar -xzf nu-0.96.1-x86_64-unknown-linux-musl.tar.gz
+    sudo mv nu-0.96.1-x86_64-unknown-linux-musl/nu /usr/local/bin/
+    rm -rf nu-0.96.1-x86_64-unknown-linux-musl*
+  args:
+    creates: /usr/local/bin/nu
+  when: nushell_check.rc != 0
+
+# Install Starship prompt
+- name: Check if Starship is installed
+  command: which starship
+  register: starship_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install Starship
+  shell: curl -sS https://starship.rs/install.sh | sh -s -- --yes
+  when: starship_check.rc != 0
+
+# Install uv (Python package manager)
+- name: Check if uv is installed
+  command: which uv
+  register: uv_check
+  ignore_errors: yes
+  changed_when: false
+  become: no
+
+- name: Install uv
+  shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+  when: uv_check.rc != 0
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+
+# Install Python 3.12 via uv
+- name: Install Python 3.12 via uv
+  shell: "{{ user_home }}/.local/bin/uv python install 3.12"
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+  when: uv_check.rc != 0
+
+# Install Node.js and npm
+- name: Check if Node.js is installed
+  command: which node
+  register: node_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Download and install NodeSource setup script
+  shell: |
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  when: node_check.rc != 0
+
+- name: Install Node.js
+  apt:
+    name: nodejs
+    state: present
+  when: node_check.rc != 0
+
+# Install Docker
+- name: Check if Docker is installed
+  command: which docker
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: docker_check.rc != 0
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+  when: docker_check.rc != 0
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+  when: docker_check.rc != 0
+
+- name: Add user to docker group
+  user:
+    name: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    groups: docker
+    append: yes
+  when: docker_check.rc != 0
+
+# Install Python tools via uv
+- name: Install Python development tools via uv
+  shell: "{{ user_home }}/.local/bin/uv tool install {{ item }}"
+  loop:
+    - ruff
+    - pyright
+    - bandit
+    - pre-commit
+    - duckdb
+    - datasette
+    - litecli
+    - csvkit
+    - rich-cli
+    - just
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+  ignore_errors: yes
+
+# Setup directories
+- name: Ensure ~/.local/bin exists
+  file:
+    path: "{{ user_home }}/.local/bin"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: Ensure ~/bin exists
+  file:
+    path: "{{ user_home }}/bin"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: Ensure ~/.config directory exists
+  file:
+    path: "{{ user_home }}/.config"
+    state: directory
+    mode: '0755'
+  become: no
+
+# Create bat symlink
+- name: Check if batcat exists
+  stat:
+    path: /usr/bin/batcat
+  register: batcat_stat
+
+- name: Create symbolic link for bat from batcat
+  file:
+    src: /usr/bin/batcat
+    dest: "{{ user_home }}/.local/bin/bat"
+    state: link
+  become: no
+  when: ansible_os_family == "Debian" and batcat_stat.stat.exists
+
+# Create fd symlink
+- name: Check if fdfind exists
+  stat:
+    path: /usr/bin/fdfind
+  register: fdfind_stat
+
+- name: Create symbolic link for fd from fdfind
+  file:
+    src: /usr/bin/fdfind
+    dest: "{{ user_home }}/.local/bin/fd"
+    state: link
+  become: no
+  when: ansible_os_family == "Debian" and fdfind_stat.stat.exists
+
+# Set zsh as default shell
+- name: Set zsh as default shell
+  user:
+    name: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    shell: /usr/bin/zsh
