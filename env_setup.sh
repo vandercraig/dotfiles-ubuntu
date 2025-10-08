@@ -187,14 +187,14 @@ else
     print_success "Zsh is already your default shell"
 fi
 
-# Install Just (command runner)
-print_status "Installing Just (command runner)..."
-if command -v uv &> /dev/null; then
-    uv tool install just
-    print_success "Just (command runner) installed via uv"
-else
-    print_warning "uv not available, skipping Just installation"
-fi
+# # Install Just (command runner)
+# print_status "Installing Just (command runner)..."
+# if command -v uv &> /dev/null; then
+#     uv tool install just
+#     print_success "Just (command runner) installed via uv"
+# else
+#     print_warning "uv not available, skipping Just installation"
+# fi
 
 # Install Claude Code
 print_status "Installing Claude Code..."
