@@ -40,10 +40,9 @@
 
 # Install Tailscale VPN
 - name: Check if Tailscale is installed
-  command: which tailscale
-  register: tailscale_check
-  ignore_errors: yes
-  changed_when: false
+  stat:
+    path: /usr/bin/tailscale
+  register: tailscale_stat
 
 - name: Install Tailscale
   block:
@@ -62,7 +61,7 @@
     file:
       path: /tmp/tailscale-install.sh
       state: absent
-  when: tailscale_check.rc != 0
+  when: not tailscale_stat.stat.exists
 
 - name: Enable Tailscale service
   systemd:

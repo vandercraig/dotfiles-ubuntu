@@ -37,10 +37,9 @@
 
 # Install Nushell from Gemfury repository
 - name: Check if Nushell is installed
-  command: which nu
-  register: nushell_check
-  ignore_errors: yes
-  changed_when: false
+  stat:
+    path: /usr/bin/nu
+  register: nushell_stat
 
 - name: Add Nushell Gemfury repository
   copy:
@@ -53,31 +52,33 @@
       gpgkey=https://yum.fury.io/nushell/gpg.key
     dest: /etc/yum.repos.d/fury-nushell.repo
     mode: '0644'
-  when: nushell_check.rc != 0
+  when: not nushell_stat.stat.exists
 
 - name: Install Nushell
   dnf:
     name: nushell
     state: present
-  when: nushell_check.rc != 0
+  when: not nushell_stat.stat.exists
 
 # Install Neovim (version 0.11+ required for NvChad)
 - name: Check if Neovim is installed
-  command: which nvim
-  register: nvim_check
-  ignore_errors: yes
-  changed_when: false
+  stat:
+    path: /usr/local/bin/nvim
+  register: nvim_stat
 
 - name: Check Neovim version if installed
-  shell: nvim --version | head -n1 | grep -oP 'v\K[0-9]+\.[0-9]+'
-  register: nvim_version
-  ignore_errors: yes
+  shell: nvim --version 2>/dev/null | head -n1 | grep -oP 'v\K[0-9]+\.[0-9]+' || echo "0.0"
+  register: nvim_version_check
   changed_when: false
-  when: nvim_check.rc == 0
+  when: nvim_stat.stat.exists
+
+- name: Set Neovim version fact
+  set_fact:
+    nvim_version: "{{ nvim_version_check.stdout if nvim_stat.stat.exists else '0.0' }}"
 
 - name: Determine if Neovim needs installation
   set_fact:
-    needs_nvim_install: "{{ nvim_check.rc != 0 or (nvim_version.stdout is defined and nvim_version.stdout != '' and nvim_version.stdout is version('0.11', '<')) }}"
+    needs_nvim_install: "{{ not nvim_stat.stat.exists or nvim_version is version('0.11', '<') }}"
 
 - name: Install Neovim from AppImage
   block:
@@ -108,10 +109,9 @@
   changed_when: false
 
 - name: Check if WezTerm is installed
-  command: which wezterm
-  register: wezterm_check
-  ignore_errors: yes
-  changed_when: false
+  stat:
+    path: /usr/bin/wezterm
+  register: wezterm_stat
   when: is_wsl.rc != 0
 
 - name: Install WezTerm from Copr
@@ -130,30 +130,28 @@
     dnf:
       name: wezterm
       state: present
-  when: is_wsl.rc != 0 and wezterm_check.rc != 0
+  when: is_wsl.rc != 0 and not wezterm_stat.stat.exists
 
 # Install Starship prompt
 - name: Check if Starship is installed
-  command: which starship
-  register: starship_check
-  ignore_errors: yes
-  changed_when: false
+  stat:
+    path: /usr/local/bin/starship
+  register: starship_stat
 
 - name: Install Starship
   shell: curl -sS https://starship.rs/install.sh | sh -s -- --yes
-  when: starship_check.rc != 0
+  when: not starship_stat.stat.exists
 
 # Install uv (Python package manager)
 - name: Check if uv is installed
-  command: which uv
-  register: uv_check
-  ignore_errors: yes
-  changed_when: false
+  stat:
+    path: "{{ user_home }}/.local/bin/uv"
+  register: uv_stat
   become: no
 
 - name: Install uv
   shell: curl -LsSf https://astral.sh/uv/install.sh | sh
-  when: uv_check.rc != 0
+  when: not uv_stat.stat.exists
   become: no
   environment:
     HOME: "{{ user_home }}"
@@ -164,32 +162,30 @@
   become: no
   environment:
     HOME: "{{ user_home }}"
-  when: uv_check.rc != 0
+  when: not uv_stat.stat.exists
 
 # Install Node.js and npm
 - name: Check if Node.js is installed
-  command: which node
-  register: node_check
-  ignore_errors: yes
-  changed_when: false
+  stat:
+    path: /usr/bin/node
+  register: node_stat
 
 - name: Download and install NodeSource setup script for Fedora
   shell: |
     curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo -E bash -
-  when: node_check.rc != 0
+  when: not node_stat.stat.exists
 
 - name: Install Node.js
   dnf:
     name: nodejs
     state: present
-  when: node_check.rc != 0
+  when: not node_stat.stat.exists
 
 # Install Docker
 - name: Check if Docker is installed
-  command: which docker
-  register: docker_check
-  ignore_errors: yes
-  changed_when: false
+  stat:
+    path: /usr/bin/docker
+  register: docker_stat
 
 - name: Install Docker on Fedora
   block:
@@ -219,7 +215,7 @@
       name: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
       groups: docker
       append: yes
-  when: docker_check.rc != 0
+  when: not docker_stat.stat.exists
 
 # Install Python tools via uv
 - name: Install Python development tools via uv
