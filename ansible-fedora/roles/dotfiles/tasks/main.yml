@@ -1,0 +1,256 @@
+# Update system packages
+- name: Update dnf cache
+  dnf:
+    update_cache: yes
+
+- name: Upgrade all packages
+  dnf:
+    name: "*"
+    state: latest
+
+# Install base system packages
+- name: Install base packages
+  dnf:
+    name:
+    - git
+    - curl
+    - wget
+    - "@development-tools"
+    - ca-certificates
+    - gnupg
+    - zsh
+    - tree
+    - htop
+    - jq
+    - sqlite
+    - unzip
+    - zip
+    - ripgrep
+    - fd-find
+    - bat
+    - python3-pip
+    - stow
+    - gh
+    - pass
+    - direnv
+    state: present
+
+# Install Neovim (version 0.11+ required for NvChad)
+- name: Check if Neovim is installed
+  command: which nvim
+  register: nvim_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Check Neovim version if installed
+  shell: nvim --version | head -n1 | grep -oP 'v\K[0-9]+\.[0-9]+'
+  register: nvim_version
+  ignore_errors: yes
+  changed_when: false
+  when: nvim_check.rc == 0
+
+- name: Determine if Neovim needs installation
+  set_fact:
+    needs_nvim_install: "{{ nvim_check.rc != 0 or (nvim_version.stdout is defined and nvim_version.stdout != '' and nvim_version.stdout is version('0.11', '<')) }}"
+
+- name: Install Neovim from AppImage
+  block:
+  - name: Download Neovim stable AppImage (v0.11.4+)
+    get_url:
+      url: https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.appimage
+      dest: /tmp/nvim.appimage
+      mode: '0755'
+
+  - name: Install Neovim AppImage to /usr/local/bin
+    copy:
+      src: /tmp/nvim.appimage
+      dest: /usr/local/bin/nvim
+      mode: '0755'
+      remote_src: yes
+
+  - name: Clean up AppImage download
+    file:
+      path: /tmp/nvim.appimage
+      state: absent
+  when: needs_nvim_install
+
+# Install WezTerm (skip on WSL)
+- name: Check if running on WSL
+  shell: grep -qi microsoft /proc/version
+  register: is_wsl
+  failed_when: false
+  changed_when: false
+
+- name: Check if WezTerm is installed
+  command: which wezterm
+  register: wezterm_check
+  ignore_errors: yes
+  changed_when: false
+  when: is_wsl.rc != 0
+
+- name: Install WezTerm from Copr
+  block:
+  - name: Enable WezTerm Copr repository
+    command: dnf copr enable -y wezfurlong/wezterm
+    args:
+      creates: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:wezfurlong:wezterm.repo
+
+  - name: Install WezTerm
+    dnf:
+      name: wezterm
+      state: present
+  when: is_wsl.rc != 0 and wezterm_check.rc != 0
+
+# Install Nushell
+- name: Check if Nushell is installed
+  command: which nu
+  register: nushell_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Download and install Nushell
+  shell: |
+    curl -LO https://github.com/nushell/nushell/releases/latest/download/nu-0.96.1-x86_64-unknown-linux-musl.tar.gz
+    tar -xzf nu-0.96.1-x86_64-unknown-linux-musl.tar.gz
+    sudo mv nu-0.96.1-x86_64-unknown-linux-musl/nu /usr/local/bin/
+    rm -rf nu-0.96.1-x86_64-unknown-linux-musl*
+  args:
+    creates: /usr/local/bin/nu
+  when: nushell_check.rc != 0
+
+# Install Starship prompt
+- name: Check if Starship is installed
+  command: which starship
+  register: starship_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install Starship
+  shell: curl -sS https://starship.rs/install.sh | sh -s -- --yes
+  when: starship_check.rc != 0
+
+# Install uv (Python package manager)
+- name: Check if uv is installed
+  command: which uv
+  register: uv_check
+  ignore_errors: yes
+  changed_when: false
+  become: no
+
+- name: Install uv
+  shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+  when: uv_check.rc != 0
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+
+# Install Python 3.12 via uv
+- name: Install Python 3.12 via uv
+  shell: "{{ user_home }}/.local/bin/uv python install 3.12"
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+  when: uv_check.rc != 0
+
+# Install Node.js and npm
+- name: Check if Node.js is installed
+  command: which node
+  register: node_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Download and install NodeSource setup script for Fedora
+  shell: |
+    curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo -E bash -
+  when: node_check.rc != 0
+
+- name: Install Node.js
+  dnf:
+    name: nodejs
+    state: present
+  when: node_check.rc != 0
+
+# Install Docker
+- name: Check if Docker is installed
+  command: which docker
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Install Docker on Fedora
+  block:
+  - name: Add Docker repository
+    get_url:
+      url: https://download.docker.com/linux/fedora/docker-ce.repo
+      dest: /etc/yum.repos.d/docker-ce.repo
+
+  - name: Install Docker
+    dnf:
+      name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+      state: present
+
+  - name: Start and enable Docker service
+    systemd:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: Add user to docker group
+    user:
+      name: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+      groups: docker
+      append: yes
+  when: docker_check.rc != 0
+
+# Install Python tools via uv
+- name: Install Python development tools via uv
+  shell: "{{ user_home }}/.local/bin/uv tool install {{ item }}"
+  loop:
+  - ruff
+  - pyright
+  - bandit
+  - pre-commit
+  - datasette
+  - litecli
+  - csvkit
+  - rich-cli
+  - just
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+  ignore_errors: yes
+
+# Setup directories
+- name: Ensure ~/.local/bin exists
+  file:
+    path: "{{ user_home }}/.local/bin"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: Ensure ~/bin exists
+  file:
+    path: "{{ user_home }}/bin"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: Ensure ~/.config directory exists
+  file:
+    path: "{{ user_home }}/.config"
+    state: directory
+    mode: '0755'
+  become: no
+
+# Note: Fedora packages bat and fd with correct names, no symlinks needed!
+
+# Set zsh as default shell
+- name: Set zsh as default shell
+  user:
+    name: "{{ ansible_env.SUDO_USER | default(ansible_user_id) }}"
+    shell: /usr/bin/zsh

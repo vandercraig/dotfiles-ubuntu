@@ -1,0 +1,4 @@
+- name: Reload zsh
+  shell: source {{ user_home }}/.zshrc
+  become: no
+  ignore_errors: yes
