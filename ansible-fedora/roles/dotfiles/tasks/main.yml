@@ -33,8 +33,33 @@
     - gh
     - pass
     - direnv
-    - nushell
     state: present
+
+# Install Nushell from Gemfury repository
+- name: Check if Nushell is installed
+  command: which nu
+  register: nushell_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Add Nushell Gemfury repository
+  copy:
+    content: |
+      [gemfury-nushell]
+      name=Gemfury Nushell Repo
+      baseurl=https://yum.fury.io/nushell/
+      enabled=1
+      gpgcheck=0
+      gpgkey=https://yum.fury.io/nushell/gpg.key
+    dest: /etc/yum.repos.d/fury-nushell.repo
+    mode: '0644'
+  when: nushell_check.rc != 0
+
+- name: Install Nushell
+  dnf:
+    name: nushell
+    state: present
+  when: nushell_check.rc != 0
 
 # Install Neovim (version 0.11+ required for NvChad)
 - name: Check if Neovim is installed
