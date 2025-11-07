@@ -1,43 +1,3 @@
-# Install Dropbox headless daemon
-- name: Check if Dropbox daemon is installed
-  stat:
-    path: "{{ user_home }}/.dropbox-dist/dropboxd"
-  register: dropbox_daemon
-
-- name: Check if Dropbox CLI is installed
-  stat:
-    path: /usr/local/bin/dropbox
-  register: dropbox_cli
-
-- name: Download and install Dropbox daemon
-  block:
-  - name: Download Dropbox tarball
-    get_url:
-      url: https://www.dropbox.com/download?plat=lnx.x86_64
-      dest: /tmp/dropbox.tar.gz
-      mode: '0644'
-    become: no
-
-  - name: Extract Dropbox to home directory
-    unarchive:
-      src: /tmp/dropbox.tar.gz
-      dest: "{{ user_home }}"
-      remote_src: yes
-    become: no
-
-  - name: Clean up Dropbox tarball
-    file:
-      path: /tmp/dropbox.tar.gz
-      state: absent
-  when: not dropbox_daemon.stat.exists
-
-- name: Download Dropbox CLI Python script
-  get_url:
-    url: https://www.dropbox.com/download?dl=packages/dropbox.py
-    dest: /usr/local/bin/dropbox
-    mode: '0755'
-  when: not dropbox_cli.stat.exists
-
 # Install Tailscale VPN
 - name: Check if Tailscale is installed
   stat:
@@ -68,3 +28,48 @@
     name: tailscaled
     enabled: yes
     state: started
+
+# Install Tailscale zsh completion in OMZ custom plugins
+- name: Ensure Tailscale plugin directory exists
+  file:
+    path: "{{ user_home }}/.oh-my-zsh/custom/plugins/tailscale"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: Install Tailscale zsh completion
+  shell: tailscale completion zsh > "{{ user_home }}/.oh-my-zsh/custom/plugins/tailscale/_tailscale"
+  args:
+    creates: "{{ user_home }}/.oh-my-zsh/custom/plugins/tailscale/_tailscale"
+  when: tailscale_stat.stat.exists
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+
+# Install Visual Studio Code
+- name: Check if VS Code is installed
+  stat:
+    path: /usr/bin/code
+  register: vscode_stat
+
+- name: Install Visual Studio Code
+  block:
+  - name: Import Microsoft GPG key
+    rpm_key:
+      key: https://packages.microsoft.com/keys/microsoft.asc
+      state: present
+
+  - name: Add Visual Studio Code repository
+    yum_repository:
+      name: vscode
+      description: Visual Studio Code
+      baseurl: https://packages.microsoft.com/yumrepos/vscode
+      enabled: yes
+      gpgcheck: yes
+      gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+
+  - name: Install VS Code
+    dnf:
+      name: code
+      state: present
+  when: not vscode_stat.stat.exists

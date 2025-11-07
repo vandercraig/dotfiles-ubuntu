@@ -63,7 +63,7 @@ alias j='just'
 alias jg='just -g'
 
 # bat
-alias bat='batcat'
+# alias bat='batcat'
 # ------------------------------------------------------------------------------
 # 3. Functions
 # ------------------------------------------------------------------------------
@@ -108,6 +108,9 @@ plugins=(
     z
     extract
     colored-man-pages
+    uv
+    tailscale
+    starship
 )
 
 # Source Oh My Zsh
@@ -125,6 +128,9 @@ eval "$(starship init zsh)"
 
 # direnv hook (.envrc)
 eval "$(direnv hook zsh)"
+
+# Enable command auto-completion
+autoload -U compinit; compinit
 
 # Source local environment file if it exists
 if [ -f "$HOME/.local/bin/env" ]; then

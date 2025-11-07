@@ -2,11 +2,19 @@ Update ansible readme
 
 Have wezterm switch backgrounds/themes upon ssh:
 
-- Have bright mode theme activate if ssh'ing with root user
-- Probably a lua thing
-- move bg image from dropbox -> git repo, enable LFS
+- background based on hostname
+- slide show option?
+- default image otherwise
+
+wezterm multiplexing
 
 Update starshell config to show hostname
+
+Flathub dependencies
+
+Add git profiles for ffxiv
+
+VScode?
 
 ## Just recipes (local)
 
@@ -28,8 +36,4 @@ Update starshell config to show hostname
 - KDE management, once customized
   - Background
   - Theme(s)
-- Desktop/gaming specifics
-  - Steam/proton
-  - Driver setup?
-  - FFXIV / dalamud launcher
 - setup pass

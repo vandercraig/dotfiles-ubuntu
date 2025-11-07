@@ -142,6 +142,23 @@
   shell: curl -sS https://starship.rs/install.sh | sh -s -- --yes
   when: not starship_stat.stat.exists
 
+# Install Starship zsh completion in OMZ custom plugins
+- name: Ensure Starship plugin directory exists
+  file:
+    path: "{{ user_home }}/.oh-my-zsh/custom/plugins/starship"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: Install Starship zsh completion
+  shell: starship completions zsh > "{{ user_home }}/.oh-my-zsh/custom/plugins/starship/_starship"
+  args:
+    creates: "{{ user_home }}/.oh-my-zsh/custom/plugins/starship/_starship"
+  when: starship_stat.stat.exists
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+
 # Install uv (Python package manager)
 - name: Check if uv is installed
   stat:
@@ -256,6 +273,53 @@
     state: directory
     mode: '0755'
   become: no
+
+# Install Oh My Zsh (idempotent)
+- name: Check if Oh My Zsh is installed
+  stat:
+    path: "{{ user_home }}/.oh-my-zsh"
+  register: omz_stat
+  become: no
+
+- name: Install Oh My Zsh using the official installer
+  shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  args:
+    creates: "{{ user_home }}/.oh-my-zsh"
+    chdir: "{{ user_home }}"
+  when: not omz_stat.stat.exists
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+    RUNZSH: "no"
+    CHSH: "no"
+
+# Install Oh My Zsh plugins (zsh-autosuggestions, zsh-syntax-highlighting)
+- name: Ensure Oh My Zsh custom plugins directory exists
+  file:
+    path: "{{ user_home }}/.oh-my-zsh/custom/plugins"
+    state: directory
+    mode: '0755'
+  become: no
+
+- name: Install zsh-autosuggestions plugin
+  git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions.git
+    dest: "{{ user_home }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    update: no
+  when: omz_stat.stat.exists or (omz_stat is defined and not omz_stat.stat.exists == false)
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
+
+- name: Install zsh-syntax-highlighting plugin
+  git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    dest: "{{ user_home }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    update: no
+  when: omz_stat.stat.exists or (omz_stat is defined and not omz_stat.stat.exists == false)
+  become: no
+  environment:
+    HOME: "{{ user_home }}"
 
 # Note: Fedora packages bat and fd with correct names, no symlinks needed!
 
