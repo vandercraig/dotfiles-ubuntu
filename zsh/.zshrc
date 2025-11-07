@@ -67,6 +67,29 @@ alias jg='just -g'
 # ------------------------------------------------------------------------------
 # 3. Functions
 # ------------------------------------------------------------------------------
+# GitHub CLI wrapper - auto-switch user based on directory
+gh() {
+    local current_dir="$(pwd)"
+    local gh_user=""
+
+    # Determine which user to use based on current directory
+    if [[ "$current_dir" == *"/ffxiv-repos/"* ]]; then
+        gh_user="ffxiv-acerola"
+    else
+        gh_user="vandercraig"
+    fi
+
+    # Cache the last known state to avoid repeated checks
+    if [[ "$_GH_LAST_USER" != "$gh_user" ]]; then
+        # Only switch if we need to change users
+        command gh auth switch --user "$gh_user" >/dev/null 2>&1
+        export _GH_LAST_USER="$gh_user"
+    fi
+
+    # Run the actual gh command
+    command gh "$@"
+}
+
 # Function to extract most archive types
 extract() {
     if [ -f "$1" ]; then

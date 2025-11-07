@@ -13,6 +13,7 @@
   dnf:
     name:
     - git
+    - git-lfs
     - curl
     - wget
     - "@development-tools"

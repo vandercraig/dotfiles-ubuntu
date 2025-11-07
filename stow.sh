@@ -42,6 +42,7 @@ PACKAGES=(
     "nvim"
     "starship"
     "nushell"
+    "git"
 )
 
 # Add wezterm only if not on WSL
