@@ -1,6 +1,9 @@
 -- Pull in the wezterm API
 local wezterm = require 'wezterm'
 
+-- Load the wez-tmux plugin for tmux-like keybindings
+local wez_tmux = wezterm.plugin.require 'https://github.com/sei40kr/wez-tmux.git'
+
 -- This will hold our configuration
 local config = {}
 
@@ -9,6 +12,11 @@ local config = {}
 if wezterm.config_builder then
   config = wezterm.config_builder()
 end
+
+-- Configure your leader key (recommended to avoid conflicts)
+config.leader = { key = "a", mods = "CTRL" }  -- Use Ctrl+a instead of default Ctrl+b
+
+
 
 -- -----------------------------------------------------------------------------
 -- User Parameters:
@@ -143,6 +151,9 @@ end)
 
 -- IMPORTANT: We ensure window_background_opacity is NOT set,
 -- so it defaults to 1.0 (fully opaque).
+
+-- Apply wez-tmux plugin keybindings
+wez_tmux.apply_to_config(config)
 
 -- Finally, return the configuration
 return config

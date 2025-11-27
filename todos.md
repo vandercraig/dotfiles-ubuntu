@@ -1,18 +1,21 @@
 Update ansible readme
 
-Have wezterm switch backgrounds/themes upon ssh:
+Background slideshow
+SSH manager
 
+- tethys
+- linode ffxiv VPS
+Pane bar more
+Tab bar
+Themes/profiles?
+Wallpaper management: <https://github.com/sunbearc22/sb_show_wallpapers.wezterm>
 - background based on hostname
 - slide show option?
 - default image otherwise
 
-wezterm multiplexing
-
 Update starshell config to show hostname
 
 Flathub dependencies
-
-Add git profiles for ffxiv
 
 VScode?
 
