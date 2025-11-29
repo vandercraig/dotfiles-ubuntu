@@ -18,11 +18,11 @@ return {
     event = "InsertEnter",
   },
 
-  {
-    "fabridamicelli/cronex.nvim",
-    event = "VeryLazy",
-    opts = {},
-  },
+  -- {
+  --   "fabridamicelli/cronex.nvim",
+  --   event = "VeryLazy",
+  --   opts = {},
+  -- },
   -- test new blink
   -- { import = "nvchad.blink.lazyspec" },
 

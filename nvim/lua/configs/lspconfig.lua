@@ -1,6 +1,5 @@
 require("nvchad.configs.lspconfig").defaults()
 
-local lspconfig = require "lspconfig"
 local nvlsp = require "nvchad.configs.lspconfig"
 
 -- List of servers to enable
@@ -10,7 +9,10 @@ local servers = { "html", "cssls", "pyright", "ruff", "marksman", "taplo", "json
 for _, lsp in ipairs(servers) do
   if lsp == "yamlls" then
     -- Custom YAML setup with schemas
-    lspconfig[lsp].setup {
+    vim.lsp.config[lsp] = {
+      cmd = { "yaml-language-server", "--stdio" },
+      filetypes = { "yaml", "yml" },
+      root_markers = { ".git" },
       on_attach = nvlsp.on_attach,
       on_init = nvlsp.on_init,
       capabilities = nvlsp.capabilities,
@@ -42,7 +44,7 @@ for _, lsp in ipairs(servers) do
     }
   else
     -- Default setup for other servers
-    lspconfig[lsp].setup {
+    vim.lsp.config[lsp] = {
       on_attach = nvlsp.on_attach,
       on_init = nvlsp.on_init,
       capabilities = nvlsp.capabilities,
