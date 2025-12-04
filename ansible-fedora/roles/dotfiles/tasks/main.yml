@@ -34,6 +34,23 @@
     - gh
     - pass
     - direnv
+    - dnf-plugins-core
+    state: present
+
+# Install copr packages (lazygit, wezterm)
+- name: Enable Fedora Copr for LazyGit
+  community.general.copr:
+    name: dejan/lazygit
+
+- name: Enable Fedora Copr for wezterm
+  community.general.copr:
+    name: wezfurlong/wezterm-nightly
+
+- name: Install LazyGit and WezTerm from Copr
+  dnf:
+    name:
+    - lazygit
+    - wezterm
     state: present
 
 # Install Nushell from Gemfury repository
@@ -101,37 +118,6 @@
       path: /tmp/nvim.appimage
       state: absent
   when: needs_nvim_install
-
-# Install WezTerm (skip on WSL)
-- name: Check if running on WSL
-  shell: grep -qi microsoft /proc/version
-  register: is_wsl
-  failed_when: false
-  changed_when: false
-
-- name: Check if WezTerm is installed
-  stat:
-    path: /usr/bin/wezterm
-  register: wezterm_stat
-  when: is_wsl.rc != 0
-
-- name: Install WezTerm from Copr
-  block:
-  - name: Install dnf plugins (required for copr)
-    dnf:
-      name: dnf-plugins-core
-      state: present
-
-  - name: Enable WezTerm Copr repository
-    community.general.copr:
-      name: wezfurlong/wezterm-nightly
-      state: enabled
-
-  - name: Install WezTerm
-    dnf:
-      name: wezterm
-      state: present
-  when: is_wsl.rc != 0 and not wezterm_stat.stat.exists
 
 # Install Starship prompt
 - name: Check if Starship is installed

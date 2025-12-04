@@ -55,6 +55,9 @@ alias gp='git push'
 alias gl='git pull'
 alias gd='git diff'
 
+# Lazygit
+alias lg='lazygit'
+
 # uv
 alias uva='source .venv/bin/activate'
 
