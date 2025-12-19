@@ -1,7 +1,7 @@
 return {
   {
     "stevearc/conform.nvim",
-    -- event = 'BufWritePre', -- uncomment for format on save
+    event = 'BufWritePre', -- uncomment for format on save
     opts = require "configs.conform",
   },
 
@@ -12,11 +12,17 @@ return {
       require "configs.lspconfig"
     end,
   },
-
   {
-    "github/copilot.vim",
-    event = "InsertEnter",
+      "danymat/neogen",
+      config = true,
+      -- Uncomment next line if you want to follow only stable versions
+      -- version = "*" 
   },
+
+  -- {
+  --   "github/copilot.vim",
+  --   event = "InsertEnter",
+  -- },
 
   -- {
   --   "fabridamicelli/cronex.nvim",

@@ -25,6 +25,18 @@ require("lazy").setup({
   { import = "plugins" },
 }, lazy_config)
 
+require("neogen").setup({
+  enabled = true,
+  input_after_comment = true,
+  languages = {
+    python = {
+      template = {
+        annotation_style = "numpydoc",
+      },
+    },
+  },
+})
+
 -- load theme
 dofile(vim.g.base46_cache .. "defaults")
 dofile(vim.g.base46_cache .. "statusline")
